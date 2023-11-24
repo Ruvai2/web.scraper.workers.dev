@@ -29,32 +29,34 @@ class Scraper {
     return this
   }
 
-  async getText({ spaced }) {
-    const matches = {}
-    const selectors = new Set(this.selector.split(',').map(s => s.trim()))
+async getText({ spaced }) {
+  const matches = {}
+  const selectors = new Set(this.selector.split(',').map(s => s.trim()))
 
-    selectors.forEach((selector) => {
-      matches[selector] = []
+  selectors.forEach((selector) => {
+    matches[selector] = []
 
-      let nextText = ''
+    let nextText = ''
 
-      this.rewriter.on(selector, {
-        element(element) {
-          matches[selector].push(true)
+    this.rewriter.on(selector, {
+      element(element) {
+        matches[selector].push(true)
+        nextText = ''
+      },
+
+      text(text) {
+        nextText += text.text
+
+        if (text.lastInTextNode) {
+          if (spaced) nextText += ' '
+          // Add a replacement for the specific HTML entity here
+          nextText = nextText.replace(/&#120707;/g, ''); // Replace the HTML entity
+          matches[selector].push(nextText)
           nextText = ''
-        },
-
-        text(text) {
-          nextText += text.text
-
-          if (text.lastInTextNode) {
-            if (spaced) nextText += ' '
-            matches[selector].push(nextText)
-            nextText = ''
-          }
         }
-      })
+      }
     })
+  })
 
     const transformed = this.rewriter.transform(this.response)
 
